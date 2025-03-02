@@ -20,12 +20,19 @@ output "private_subnets_ids" {
   description = "value of the private subnets ids"
 }
 
+#private subnets cidr
+output "private_subnet_cidrs" {
+  description = "List of CIDR blocks for private subnets"
+  value       = aws_subnet.private_subnets[*].cidr_block
+}
+
+
 output "rds_subnet_group_id" {
-  value = aws_db_subnet_group.rds_subnet_group.id
+  value       = aws_db_subnet_group.rds_subnet_group.id
   description = "value of the rds subnet group id"
 }
 
 output "rds_subnet_group_name" {
-  value = aws_db_subnet_group.rds_subnet_group.name
+  value       = aws_db_subnet_group.rds_subnet_group.name
   description = "value of the rds subnet group name"
 }
