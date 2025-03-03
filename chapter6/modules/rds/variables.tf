@@ -36,3 +36,8 @@ variable "allowed_cidr_blocks" {
   type        = list(string)
   default     = []
 }
+
+variable "db_username" {
+  type    = string
+  default = "admin"
+}

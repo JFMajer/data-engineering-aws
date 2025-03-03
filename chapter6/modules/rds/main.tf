@@ -6,8 +6,9 @@ resource "aws_db_instance" "mysql" {
   allocated_storage           = var.allocated_storage
   storage_type                = "gp3"
   manage_master_user_password = true
+  username                    = var.db_username
   db_name                     = var.db_name
-  parameter_group_name        = "default.mariadb11.4.4"
+  parameter_group_name        = "default.mariadb11.4"
   skip_final_snapshot         = true
   publicly_accessible         = false
   vpc_security_group_ids      = [aws_security_group.rds.id]

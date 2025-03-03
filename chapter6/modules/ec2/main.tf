@@ -1,7 +1,7 @@
 # IAM Role for EC2 to access Secrets Manager
 resource "aws_iam_role" "ec2_role" {
   name = "${var.name_prefix}-ec2-role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -21,7 +21,7 @@ resource "aws_iam_role_policy_attachment" "ssm_managed_policy" {
 
 resource "aws_iam_policy" "secrets_access" {
   name = "${var.name_prefix}-secrets-access"
-  
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -29,7 +29,7 @@ resource "aws_iam_policy" "secrets_access" {
         "secretsmanager:GetSecretValue",
         "secretsmanager:DescribeSecret"
       ]
-      Effect = "Allow"
+      Effect   = "Allow"
       Resource = var.rds_secret_arn
     }]
   })
@@ -59,17 +59,6 @@ resource "aws_security_group" "ec2_sg" {
 }
 
 
-# Template file for user data
-data "template_file" "user_data" {
-  template = file("${path.module}/user-data.sh")
-  
-  vars = {
-    rds_endpoint   = var.rds_endpoint
-    db_username    = var.db_username
-    rds_secret_arn = var.rds_secret_arn
-  }
-}
-
 data "aws_ssm_parameter" "amzn2023_ami" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
 }
@@ -80,12 +69,12 @@ resource "aws_instance" "app" {
   subnet_id              = var.subnet_id
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  user_data              = templatefile("${path.module}/user-data.sh", {
+  user_data = templatefile("${path.module}/user-data.sh", {
     rds_endpoint   = var.rds_endpoint
     db_username    = var.db_username
     rds_secret_arn = var.rds_secret_arn
   })
-  
+
   tags = {
     Name = "${var.name_prefix}-app"
   }

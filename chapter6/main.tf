@@ -20,7 +20,7 @@ module "ec2" {
   source         = "./modules/ec2"
   name_prefix    = "chapter6"
   vpc_id         = module.vpc.vpc_id
-  subnet_id      = module.vpc.private_subnets[0] # Use first private subnet
+  subnet_id      = module.vpc.private_subnets_ids[0]
   rds_endpoint   = module.rds.rds_endpoint
   db_username    = module.rds.rds_username
   rds_secret_arn = module.rds.rds_secret_arn
