@@ -1,9 +1,9 @@
 module "vpc" {
-  app_name              = "chapter6"
-  source                = "./modules/vpc"
-  vpc_cidr              = "10.0.0.0/16"
-  env                   = "dev"
-  public_subnet_cidrs  = {
+  app_name = "chapter6"
+  source   = "./modules/vpc"
+  vpc_cidr = "10.0.0.0/16"
+  env      = "dev"
+  public_subnet_cidrs = {
     "eu-north-1a" = "10.0.10.0/24"
     "eu-north-1b" = "10.0.11.0/24"
     "eu-north-1c" = "10.0.12.0/24"

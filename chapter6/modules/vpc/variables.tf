@@ -21,3 +21,9 @@ variable "private_subnet_cidrs" {
   type        = list(string)
   description = "List of private subnet CIDRs"
 }
+
+variable "multi_az_nat_gateway" {
+  type        = bool
+  default     = false
+  description = "Whether to deploy NAT Gateways in multiple AZs"
+}
