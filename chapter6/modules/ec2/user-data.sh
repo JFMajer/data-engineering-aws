@@ -5,9 +5,10 @@ yum update -y
 yum install -y mariadb105 unzip jq aws-cli
 
 # Get RDS password from Secrets Manager
+REGION='${region}'
 SECRET_VALUE=$(aws secretsmanager get-secret-value \
-  --secret-id ${rds_secret_arn} \
-  --region $(curl -s http://169.254.169.254/latest/meta-data/placement/region) \
+  --secret-id '${rds_secret_arn}' \
+  --region "$REGION" \
   --query 'SecretString' --output text)
 
 DB_PASSWORD=$(echo "$SECRET_VALUE" | jq -r '.password')

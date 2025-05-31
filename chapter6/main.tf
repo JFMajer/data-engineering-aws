@@ -30,7 +30,7 @@ module "ec2" {
   name_prefix    = "chapter6"
   vpc_id         = module.vpc.vpc_id
   subnet_id      = module.vpc.private_subnets_ids[0]
-  rds_address   = module.rds.rds_address
+  rds_address    = module.rds.rds_address
   db_username    = module.rds.rds_username
   rds_secret_arn = module.rds.rds_secret_arn
   rds_id         = module.rds.rds_id
@@ -47,19 +47,78 @@ module "s3_bucket_cz" {
 }
 
 
-resource "aws_iam_role" "dms_s3_role" {
-  name = "dms-s3-role"
+data "aws_secretsmanager_secret_version" "rds_secret" {
+  secret_id = module.rds.rds_secret_arn
+}
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "dms.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
+locals {
+  rds_secret_json = jsondecode(data.aws_secretsmanager_secret_version.rds_secret.secret_string)
+
+  rds_username = local.rds_secret_json.username
+  rds_password = local.rds_secret_json.password
+}
+
+module "dms" {
+  source = "./modules/dms"
+
+  name_prefix         = "chapter6"
+  instance_class      = "dms.t3.medium"
+  vpc_id              = module.vpc.vpc_id
+  allocated_storage   = 50
+  dms_subnet_group_id = module.vpc.dms_subnet_group_id
+
+  db_username = module.rds.rds_username
+  db_password = local.rds_password
+  rds_address = module.rds.rds_address
+  rds_port    = 3306
+  db_name     = "sakila"
+
+  lz_bucket_name         = module.s3_bucket_lz.bucket_name
+  dms_s3_access_role_arn = aws_iam_role.dms_s3_role.arn
+
+  table_mappings_file = "${path.module}/table-mappings.json"
+}
+
+
+
+# 1. Assume Role policy used for all DMS roles
+data "aws_iam_policy_document" "dms_assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["dms.amazonaws.com"]
+    }
+  }
+}
+
+# 2. DMS VPC Role - AWS managed policy for VPC access
+resource "aws_iam_role" "dms_vpc_role" {
+  name               = "dms-vpc-role"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "dms_vpc_role_attach" {
+  role       = aws_iam_role.dms_vpc_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSVPCManagementRole"
+}
+
+# 3. DMS CloudWatch Logs Role - AWS managed policy for logs
+resource "aws_iam_role" "dms_cloudwatch_logs_role" {
+  name               = "dms-cloudwatch-logs-role"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "dms_cloudwatch_logs_role_attach" {
+  role       = aws_iam_role.dms_cloudwatch_logs_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSCloudWatchLogsRole"
+}
+
+# 4. Your custom S3 access role (keep as is, just clean formatting)
+resource "aws_iam_role" "dms_s3_role" {
+  name               = "dms-s3-role"
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
 }
 
 resource "aws_iam_policy" "dms_s3_policy" {
@@ -67,22 +126,18 @@ resource "aws_iam_policy" "dms_s3_policy" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:*"
-        ]
-        Resource = [
-          module.s3_bucket_lz.bucket_arn,
-          "${module.s3_bucket_lz.bucket_arn}/*"
-        ]
-      }
-    ]
+    Statement = [{
+      Effect = "Allow"
+      Action = ["s3:*"]
+      Resource = [
+        module.s3_bucket_lz.bucket_arn,
+        "${module.s3_bucket_lz.bucket_arn}/*"
+      ]
+    }]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "attach_policy" {
+resource "aws_iam_role_policy_attachment" "dms_s3_role_attach_policy" {
   role       = aws_iam_role.dms_s3_role.name
   policy_arn = aws_iam_policy.dms_s3_policy.arn
 }

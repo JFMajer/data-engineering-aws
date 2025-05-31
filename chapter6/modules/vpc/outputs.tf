@@ -42,3 +42,9 @@ output "nat_gateway_ids" {
   value = { for k, nat in aws_nat_gateway.nat : k => nat.id }
 }
 
+output "dms_subnet_group_id" {
+  description = "ID of the DMS subnet group"
+  value       = aws_dms_replication_subnet_group.dms_subnet_group.replication_subnet_group_id
+}
+
+

@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 # IAM Role for EC2 to access Secrets Manager
 resource "aws_iam_role" "ec2_role" {
   name = "${var.name_prefix}-ec2-role"
@@ -70,9 +72,10 @@ resource "aws_instance" "app" {
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
   user_data = templatefile("${path.module}/user-data.sh", {
-    rds_address   = var.rds_address
+    rds_address    = var.rds_address
     db_username    = var.db_username
     rds_secret_arn = var.rds_secret_arn
+    region         = data.aws_region.current.name
   })
 
   tags = {

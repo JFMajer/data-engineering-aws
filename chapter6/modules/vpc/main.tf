@@ -137,3 +137,16 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
     Name = "rds-mysql-${local.vpc_name}"
   }
 }
+
+#####################################
+# DMS Subnet Group                  #
+#####################################
+resource "aws_dms_replication_subnet_group" "dms_subnet_group" {
+  replication_subnet_group_id          = "dms-subgroup-${local.vpc_name}"
+  subnet_ids                           = values(aws_subnet.private_subnets)[*].id
+  replication_subnet_group_description = "Subnet group for DMS replication in ${local.vpc_name}"
+
+  tags = {
+    Name = "dms-${local.vpc_name}"
+  }
+}
