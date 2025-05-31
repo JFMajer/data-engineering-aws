@@ -13,8 +13,8 @@ variable "subnet_id" {
   type        = string
 }
 
-variable "rds_endpoint" {
-  description = "Endpoint of the RDS instance"
+variable "rds_address" {
+  description = "Address of the RDS instance"
   type        = string
 }
 

@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 resource "aws_security_group" "ssm" {
   name        = "${var.app_name}-ssm-${var.env}"
   description = "Security group for SSM"
@@ -27,10 +29,10 @@ resource "aws_vpc_endpoint" "ssm_endpoint" {
   for_each = local.endpoints
 
   vpc_id             = aws_vpc.vpc.id
-  service_name       = "com.amazonaws.${provider.aws.region}.${each.value.name}"
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.${each.value.name}"
   vpc_endpoint_type  = "Interface"
   security_group_ids = [aws_security_group.ssm.id]
-  subnet_ids         = aws_subnet.private_subnets[*].id
+  subnet_ids         = [for s in values(aws_subnet.private_subnets) : s.id]
 
   private_dns_enabled = true
 
