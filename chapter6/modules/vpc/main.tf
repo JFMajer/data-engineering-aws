@@ -15,13 +15,13 @@ resource "aws_vpc" "vpc" {
 ############################
 resource "aws_subnet" "public_subnets" {
   vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.${count.index + 10}.0/24"
-  availability_zone = element(var.availability_zones, count.index)
+  cidr_block        = each.value
+  availability_zone = each.key
 
-  count = var.public_subnets_count
+  for_each = local.public_subnet_map
 
   tags = {
-    Name = "public_10.0.${count.index + 10}.0_${element(var.availability_zones, count.index)}"
+    Name = "public-${each.key}-${each.value}"
   }
 }
 
@@ -30,13 +30,13 @@ resource "aws_subnet" "public_subnets" {
 ############################
 resource "aws_subnet" "private_subnets" {
   vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.${count.index + 20}.0/24"
-  availability_zone = element(var.availability_zones, count.index)
+  cidr_block        = each.value
+  availability_zone = each.key
 
-  count = var.private_subnets_count
+  for_each = local.private_subnet_map
 
   tags = {
-    Name = "private_10.0.${count.index + 20}.0_${element(var.availability_zones, count.index)}"
+    Name = "private-${each.key}-${each.value}"
   }
 }
 
@@ -68,8 +68,9 @@ resource "aws_route_table" "public_rt" {
 }
 
 resource "aws_route_table_association" "public_rt_association" {
-  count          = var.public_subnets_count
-  subnet_id      = element(aws_subnet.public_subnets.*.id, count.index)
+  for_each = aws_subnet.public_subnets
+
+  subnet_id      = aws_subnet.public_subnets[each.key].id
   route_table_id = aws_route_table.public_rt.id
 }
 
@@ -86,7 +87,8 @@ resource "aws_eip" "nat" {
 
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = element(aws_subnet.public_subnets.*.id, 0)
+  subnet_id = aws_subnet.public_subnets[keys(local.public_subnet_map)[0]].id
+
 
   tags = {
     Name = "nat-${local.vpc_name}"
@@ -112,8 +114,9 @@ resource "aws_route_table" "private_rt" {
 }
 
 resource "aws_route_table_association" "private_rt_association" {
-  count          = var.private_subnets_count
-  subnet_id      = element(aws_subnet.private_subnets.*.id, count.index)
+  for_each = aws_subnet.private_subnets
+
+  subnet_id      = aws_subnet.private_subnets[each.key].id
   route_table_id = aws_route_table.private_rt.id
 }
 
@@ -121,8 +124,8 @@ resource "aws_route_table_association" "private_rt_association" {
 # RDS Subnet Group                  #
 #####################################
 resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "rds-sub_group-${local.vpc_name}"
-  subnet_ids = aws_subnet.private_subnets.*.id
+  name = "rds-subgroup-${local.vpc_name}"
+  subnet_ids = values(aws_subnet.private_subnets)[*].id
 
   tags = {
     Name = "rds-mysql-${local.vpc_name}"

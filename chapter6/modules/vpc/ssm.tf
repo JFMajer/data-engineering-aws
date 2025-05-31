@@ -27,7 +27,7 @@ resource "aws_vpc_endpoint" "ssm_endpoint" {
   for_each = local.endpoints
 
   vpc_id             = aws_vpc.vpc.id
-  service_name       = "com.amazonaws.${var.region}.${each.value.name}"
+  service_name       = "com.amazonaws.${provider.aws.region}.${each.value.name}"
   vpc_endpoint_type  = "Interface"
   security_group_ids = [aws_security_group.ssm.id]
   subnet_ids         = aws_subnet.private_subnets[*].id

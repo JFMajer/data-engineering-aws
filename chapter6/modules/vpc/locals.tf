@@ -11,4 +11,8 @@ locals {
       name = "ec2messages"
     }
   }
+  azs = slice(data.aws_availability_zones.available.names, 0, length(var.public_subnet_cidrs))
+
+  public_subnet_map = zipmap(local.azs, var.public_subnet_cidrs)
+  private_subnet_map = zipmap(local.azs, var.private_subnet_cidrs)
 }
