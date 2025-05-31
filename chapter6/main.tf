@@ -13,6 +13,7 @@ module "vpc" {
     "eu-north-1b" = "10.0.21.0/24"
     "eu-north-1c" = "10.0.22.0/24"
   }
+  multi_az_nat_gateway = false
 }
 
 module "rds" {
