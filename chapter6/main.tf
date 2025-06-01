@@ -46,6 +46,18 @@ module "s3_bucket_cz" {
   bucket_prefix = "data-engineering-6-cz"
 }
 
+resource "aws_lambda_layer_version" "lambda_layer_wrangler" {
+  layer_name = "awswrangler_layer_3_11_0_py3_13"
+  filename   = "awswrangler-layer-3.11.0-py3.13.zip"
+}
+
+module "lambda_function" {
+  source           = "./modules/lambda"
+  bucket_lz_name   = module.s3_bucket_lz.bucket_name
+  bucket_cz_name   = module.s3_bucket_cz.bucket_name
+  lambda_layer_arn = aws_lambda_layer_version.lambda_layer_wrangler.arn
+}
+
 
 data "aws_secretsmanager_secret_version" "rds_secret" {
   secret_id = module.rds.rds_secret_arn
@@ -140,4 +152,14 @@ resource "aws_iam_policy" "dms_s3_policy" {
 resource "aws_iam_role_policy_attachment" "dms_s3_role_attach_policy" {
   role       = aws_iam_role.dms_s3_role.name
   policy_arn = aws_iam_policy.dms_s3_policy.arn
+}
+
+resource "aws_iam_role" "dms-access-for-endpoint" {
+  assume_role_policy = data.aws_iam_policy_document.dms_assume_role.json
+  name               = "dms-access-for-endpoint"
+}
+
+resource "aws_iam_role_policy_attachment" "dms-access-for-endpoint-AmazonDMSRedshiftS3Role" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDMSRedshiftS3Role"
+  role       = aws_iam_role.dms-access-for-endpoint.name
 }

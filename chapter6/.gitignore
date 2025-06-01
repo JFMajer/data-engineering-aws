@@ -1,0 +1,30 @@
+# Terraform files
+*.tfstate
+*.tfstate.*
+*.terraform/
+crash.log
+*.tfvars
+.terraform.lock.hcl
+
+# AWS Lambda package files
+lambda_function.zip
+*.pyc
+*.pyo
+__pycache__/
+
+# Python virtual environments
+venv/
+.env/
+
+# AWS specific files
+*.log
+*.json
+
+# AWS Wrangler cache
+.aws-sdk-cache/
+
+# MacOS specific files
+.DS_Store
+
+# Windows specific files
+Thumbs.db
