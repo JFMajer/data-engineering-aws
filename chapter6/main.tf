@@ -58,6 +58,11 @@ module "lambda_function" {
   lambda_layer_arn = aws_lambda_layer_version.lambda_layer_wrangler.arn
 }
 
+module "kinesis_firehose" {
+  source                  = "./modules/kinesis-firehose"
+  delivery_s3_bucket_arn  = module.s3_bucket_lz.bucket_arn
+  delivery_s3_bucket_name = module.s3_bucket_lz.bucket_name
+}
 
 data "aws_secretsmanager_secret_version" "rds_secret" {
   secret_id = module.rds.rds_secret_arn
