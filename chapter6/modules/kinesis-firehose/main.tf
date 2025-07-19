@@ -53,7 +53,7 @@ resource "aws_kinesis_firehose_delivery_stream" "to_s3" {
   extended_s3_configuration {
     role_arn            = aws_iam_role.firehose_role.arn
     bucket_arn          = var.delivery_s3_bucket_arn
-    prefix = "streaming/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/!{timestamp:HH-mm}-!{firehose:random-string}.json"
+    prefix = "streaming/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
     compression_format = "GZIP"
     buffering_size      = 64
     error_output_prefix = "streaming/errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/!{firehose:error-output-type}/"
